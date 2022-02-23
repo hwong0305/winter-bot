@@ -3,7 +3,7 @@ import fetch from 'isomorphic-unfetch'
 import 'dotenv/config'
 
 const token = process.env.DISCORD_TOKEN
-const weatherDescToIconMap = {
+const weatherDescToIconMap: { [key: string]: string } = {
   'clear-day': '☀',
   'clear-night': '',
   rain: '🌧',
@@ -39,8 +39,7 @@ client.on('interactionCreate', async interaction => {
     let location = interaction.options.getString('location') || 'Seoul'!
     fetch(`https://wttr.in/${location}?format=j1`)
       .then(r => r.json())
-      .then(async data => {
-        console.log(location, data['current_condition'])
+      .then(data => {
         const currentCondition = data['current_condition'][0]
         const {
           humidity,
@@ -51,13 +50,20 @@ client.on('interactionCreate', async interaction => {
           windspeedKmph,
           windspeedMiles
         } = currentCondition
-        const weatherDescription = currentCondition.weatherDesc[0].value
+        const weatherDescription: string = currentCondition.weatherDesc[0].value
 
         const embed = new MessageEmbed()
           .setColor('#0099ff')
           .setTitle(`Weather in ${location}`)
-          .addField('Currently', '')
           .setTimestamp()
+          .addField(
+            'Currently',
+            `${weatherDescToIconMap[weatherDescription.toLowerCase()] || ''}
+             **${weatherDescription}**\n:thermometer: Temperature **${temp_C} °C** (${temp_F} °F), Feels Like: **${FeelsLikeC} °C** (${FeelsLikeF} °F)\n:wind_blowing_face: Wind ${windspeedKmph} km/h (${windspeedMiles} mph)\n:sweat_drops: Humidity: ${humidity}%`
+          )
+          .setFooter({ text: 'powered by wttr.in' })
+
+        interaction.reply({ embeds: [embed] })
       })
       .catch(err => {
         console.log(err)
@@ -66,16 +72,8 @@ client.on('interactionCreate', async interaction => {
      * Using MessageEmbed API
      */
 
-    const embed = new MessageEmbed()
-      .setColor('#0099ff')
-      .setTitle(`Weather in ${location}`)
-      .setTimestamp()
-      .addField(
-        'Currently',
-        ':cloud: Mostly Cloudy\n:thermometer: Temperature **5.5 C** (42F), Feels Like: **4.6 C** (40F)\n:wind_blowing_face: Wind 1.4 m/s (3.2mph)\n:sweat_drops: Humidity: 68%'
-      )
     // TODO: Default reply
-    await interaction.reply('https://gfycat.com/concernedwelllitisopod')
+    // await interaction.reply('https://gfycat.com/concernedwelllitisopod')
     // await interaction.reply({ embeds: [embed] })
   }
 })
