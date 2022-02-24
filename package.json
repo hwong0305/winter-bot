@@ -7,7 +7,7 @@
     "build": "npx tsc",
     "deploy:commands": "ts-node src/deploy-command",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "start": "ts-node src/index.ts"
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
