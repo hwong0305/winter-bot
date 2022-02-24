@@ -1,5 +1,5 @@
 import { Client, Intents, MessageEmbed } from 'discord.js'
-import fetch from 'isomorphic-unfetch'
+import { fetchWeatherData } from './lib/fetchwwo'
 import 'dotenv/config'
 
 import { weatherSymbol as weatherDescToIconMap } from './iconMap'
@@ -45,9 +45,9 @@ initDb()
           location = response.user?.location
         }
 
-        fetch(`https://wttr.in/${location}?format=j1`)
-          .then(r => r.json())
+        fetchWeatherData(location!)
           .then(async data => {
+            console.log(data)
             const currentCondition = data['current_condition'][0]
             const {
               humidity,
@@ -60,21 +60,11 @@ initDb()
             } = currentCondition
             const weatherDescription: string =
               currentCondition.weatherDesc[0].value
-            const nearestArea = data['nearest_area'][0]
-
-            const areaName = nearestArea.areaName[0].value
-            const region = nearestArea.region[0].value
-            const country = nearestArea.country[0].value
 
             // Using MessageEmbed API
             const embed = new MessageEmbed()
               .setColor('#0099ff')
-              .setTitle(
-                `Weather in ${areaName}, ${
-                  region ? region + ', ' + country : country
-                }`
-              )
-              .setURL(`https://wttr.in/${location}`)
+              .setTitle(`Weather in ${data.request[0].query}`)
               .setTimestamp()
               .addField(
                 'Currently',
