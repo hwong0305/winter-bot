@@ -74,7 +74,7 @@ initDb()
                   region ? region + ', ' + country : country
                 }`
               )
-              .setURL(`https://wttr.in/${location}`)
+              .setURL(`https://wttr.in/${encodeURIComponent(location || '')}`)
               .setTimestamp()
               .addField(
                 'Currently',
@@ -87,7 +87,7 @@ initDb()
               .setFooter({ text: 'powered by wttr.in' })
 
             await updateUser(userId, location!)
-            interaction.reply({ embeds: [embed] })
+            await interaction.reply({ embeds: [embed] })
           })
           .catch(async err => {
             console.log(err)
