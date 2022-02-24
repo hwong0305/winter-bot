@@ -1,0 +1,21 @@
+export const weatherSymbol: { [key: string]: string } = {
+  unknown: '✨',
+  cloudy: '☁️',
+  fog: '🌫',
+  heavyrain: '🌧',
+  heavyshowers: '🌧',
+  heavysnow: '❄️',
+  heavysnowshowers: '❄️',
+  lightrain: '🌦',
+  lightshowers: '🌦',
+  lightsleet: '🌧',
+  lightsleetshowers: '🌧',
+  lightsnow: '🌨',
+  lightsnowshowers: '🌨',
+  partlycloudy: '⛅️',
+  sunny: '☀️',
+  thunderyheavyrain: '🌩',
+  thunderyshowers: '⛈',
+  thunderysnowShowers: '⛈',
+  verycloudy: '☁️'
+}

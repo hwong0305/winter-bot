@@ -2,22 +2,9 @@ import { Client, Intents, MessageEmbed } from 'discord.js'
 import fetch from 'isomorphic-unfetch'
 import 'dotenv/config'
 
+import { weatherSymbol as weatherDescToIconMap } from './iconMap'
+
 const token = process.env.DISCORD_TOKEN
-const weatherDescToIconMap: { [key: string]: string } = {
-  'clear-day': '☀',
-  'clear-night': '',
-  rain: '🌧',
-  snow: '☃',
-  sleet: '🌃',
-  wind: '🌬',
-  fog: '🌁',
-  cloudy: '☁',
-  'partly-cloudy-day': '⛅',
-  'partly-cloudy-night': '☁',
-  hail: '🌨',
-  thunderstorm: '⛈',
-  tornado: '🌪'
-}
 
 console.log('Bot is starting...')
 
@@ -36,7 +23,7 @@ client.on('interactionCreate', async interaction => {
   if (commandName === 'weather') {
     // TODO: Start database for storing location data by userId
     // TODO: Format data
-    let location = interaction.options.getString('location') || 'Seoul'!
+    let location = interaction.options.getString('location') || 'icn'!
     fetch(`https://wttr.in/${location}?format=j1`)
       .then(r => r.json())
       .then(data => {
@@ -51,30 +38,41 @@ client.on('interactionCreate', async interaction => {
           windspeedMiles
         } = currentCondition
         const weatherDescription: string = currentCondition.weatherDesc[0].value
+        const nearestArea = data['nearest_area'][0]
 
+        const areaName = nearestArea.areaName[0].value
+        const region = nearestArea.region[0].value
+        const country = nearestArea.country[0].value
+
+        // Using MessageEmbed API
         const embed = new MessageEmbed()
           .setColor('#0099ff')
-          .setTitle(`Weather in ${location}`)
+          .setTitle(
+            `Weather in ${areaName}, ${
+              region ? region + ', ' + country : country
+            }`
+          )
+          .setURL(`https://wttr.in/${location}`)
           .setTimestamp()
           .addField(
             'Currently',
-            `${weatherDescToIconMap[weatherDescription.toLowerCase()] || ''}
-             **${weatherDescription}**\n:thermometer: Temperature **${temp_C} °C** (${temp_F} °F), Feels Like: **${FeelsLikeC} °C** (${FeelsLikeF} °F)\n:wind_blowing_face: Wind ${windspeedKmph} km/h (${windspeedMiles} mph)\n:sweat_drops: Humidity: ${humidity}%`
+            `${
+              weatherDescToIconMap[
+                weatherDescription.split(' ').join('').toLowerCase()
+              ] || ''
+            } **${weatherDescription}**\n:thermometer: Temperature **${temp_C} °C** (${temp_F} °F), Feels Like: **${FeelsLikeC} °C** (${FeelsLikeF} °F)\n:wind_blowing_face: Wind ${windspeedKmph} km/h (${windspeedMiles} mph)\n:sweat_drops: Humidity: ${humidity}%`
           )
           .setFooter({ text: 'powered by wttr.in' })
 
         interaction.reply({ embeds: [embed] })
       })
-      .catch(err => {
+      .catch(async err => {
         console.log(err)
+        await interaction.reply('https://gfycat.com/concernedwelllitisopod')
       })
-    /**
-     * Using MessageEmbed API
-     */
 
     // TODO: Default reply
     // await interaction.reply('https://gfycat.com/concernedwelllitisopod')
-    // await interaction.reply({ embeds: [embed] })
   }
 })
 
