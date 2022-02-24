@@ -74,7 +74,7 @@ initDb()
                   ] || ''
                 } **${weatherDescription}**\n:thermometer: Temperature **${temp_C} °C** (${temp_F} °F), Feels Like: **${FeelsLikeC} °C** (${FeelsLikeF} °F)\n:wind_blowing_face: Wind ${windspeedKmph} km/h (${windspeedMiles} mph)\n:sweat_drops: Humidity: ${humidity}%`
               )
-              .setFooter({ text: 'powered by wttr.in' })
+              .setFooter({ text: 'created with love for Winter by sfwong445' })
 
             await updateUser(userId, location!)
             interaction.reply({ embeds: [embed] })
