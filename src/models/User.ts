@@ -22,7 +22,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
 User.init(
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true
     },

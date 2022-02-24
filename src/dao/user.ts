@@ -11,33 +11,14 @@ export const findUser = async (id: string) => {
   return { success: true, user: user }
 }
 
-export const createUser = async (id: string, location: string) => {
-  const payload = {
-    userId: id,
-    location
-  }
-
-  const user = await User.create(payload).catch(err => {
-    console.error(err)
+export const updateUser = async (id: string, location: string) => {
+  const user = await User.findOrCreate({
+    where: { userId: id },
+    defaults: { userId: id, location }
   })
 
-  if (!user?.id) {
-    return { success: false }
-  }
-
-  return { success: true, user: user.id }
-}
-
-export const updateUser = async (id: string, location: string) => {
-  const user = await User.findOne({ where: { userId: id } })
-
-  if (!user) return { success: false }
-
-  user.location = location
-
-  await user.save()
   return {
     success: true,
-    user: user.id
+    user: user[0].id
   }
 }
