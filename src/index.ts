@@ -25,25 +25,27 @@ initDb()
       if (!interaction.isCommand()) return
       const commandName = interaction?.commandName
       if (commandName === 'weather') {
-        // TODO: Start database for storing location data by userId
         // TODO: Move away from wttr.in which is has been reaching capacity 2/23/22
         const initialLocation = !!interaction.options.getString('location')
         let location = interaction.options.getString('location')
         const userId = interaction.user.id
 
-        const response = await findUser(userId).catch(() => {
-          interaction.reply(
-            'You have not set your location set. Set your location with `/weather {location}`'
-          )
-        })
+        if (!initialLocation) {
+          const response = await findUser(userId).catch(() => {
+            interaction.reply(
+              'You have not set your location set. Set your location with `/weather {location}`'
+            )
+            return { success: false, user: undefined }
+          })
 
-        if (!response || !response.success || !response.user) {
-          return interaction.reply(
-            'You have not set your location set. Set your location with `/weather {location}`'
-          )
+          if (!response || !response.success || !response.user) {
+            return interaction.reply(
+              'You have not set your location set. Set your location with `/weather {location}`'
+            )
+          }
+
+          location = response.user?.location
         }
-
-        location = response.user?.location
 
         fetch(`https://wttr.in/${location}?format=j1`)
           .then(r => r.json())
@@ -86,9 +88,7 @@ initDb()
               )
               .setFooter({ text: 'powered by wttr.in' })
 
-            if (!initialLocation || response.user?.location !== location) {
-              await updateUser(userId, location!)
-            }
+            await updateUser(userId, location!)
             interaction.reply({ embeds: [embed] })
           })
           .catch(async err => {
