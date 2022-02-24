@@ -3,77 +3,106 @@ import fetch from 'isomorphic-unfetch'
 import 'dotenv/config'
 
 import { weatherSymbol as weatherDescToIconMap } from './iconMap'
+import initDb from './init'
+import { findUser, updateUser } from './dao/user'
 
 const token = process.env.DISCORD_TOKEN
 
 console.log('Bot is starting...')
 
-const client = new Client({
-  intents: [Intents.FLAGS.GUILDS],
-  restRequestTimeout: 30000
-})
+initDb()
+  .then(() => {
+    const client = new Client({
+      intents: [Intents.FLAGS.GUILDS],
+      restRequestTimeout: 30000
+    })
 
-client.once('ready', () => {
-  console.log('Ready!')
-})
+    client.once('ready', () => {
+      console.log('Ready!')
+    })
 
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return
-  const commandName = interaction?.commandName
-  if (commandName === 'weather') {
-    // TODO: Start database for storing location data by userId
-    // TODO: Format data
-    let location = interaction.options.getString('location') || 'icn'!
-    fetch(`https://wttr.in/${location}?format=j1`)
-      .then(r => r.json())
-      .then(data => {
-        const currentCondition = data['current_condition'][0]
-        const {
-          humidity,
-          temp_C,
-          temp_F,
-          FeelsLikeC,
-          FeelsLikeF,
-          windspeedKmph,
-          windspeedMiles
-        } = currentCondition
-        const weatherDescription: string = currentCondition.weatherDesc[0].value
-        const nearestArea = data['nearest_area'][0]
+    client.on('interactionCreate', async interaction => {
+      if (!interaction.isCommand()) return
+      const commandName = interaction?.commandName
+      if (commandName === 'weather') {
+        // TODO: Start database for storing location data by userId
+        // TODO: Move away from wttr.in which is has been reaching capacity 2/23/22
+        const initialLocation = !!interaction.options.getString('location')
+        let location = interaction.options.getString('location')
+        const userId = interaction.user.id
 
-        const areaName = nearestArea.areaName[0].value
-        const region = nearestArea.region[0].value
-        const country = nearestArea.country[0].value
-
-        // Using MessageEmbed API
-        const embed = new MessageEmbed()
-          .setColor('#0099ff')
-          .setTitle(
-            `Weather in ${areaName}, ${
-              region ? region + ', ' + country : country
-            }`
+        const response = await findUser(userId).catch(() => {
+          interaction.reply(
+            'You have not set your location set. Set your location with `/weather {location}`'
           )
-          .setURL(`https://wttr.in/${location}`)
-          .setTimestamp()
-          .addField(
-            'Currently',
-            `${
-              weatherDescToIconMap[
-                weatherDescription.split(' ').join('').toLowerCase()
-              ] || ''
-            } **${weatherDescription}**\n:thermometer: Temperature **${temp_C} °C** (${temp_F} °F), Feels Like: **${FeelsLikeC} °C** (${FeelsLikeF} °F)\n:wind_blowing_face: Wind ${windspeedKmph} km/h (${windspeedMiles} mph)\n:sweat_drops: Humidity: ${humidity}%`
+        })
+
+        if (!response || !response.success || !response.user) {
+          return interaction.reply(
+            'You have not set your location set. Set your location with `/weather {location}`'
           )
-          .setFooter({ text: 'powered by wttr.in' })
+        }
 
-        interaction.reply({ embeds: [embed] })
-      })
-      .catch(async err => {
-        console.log(err)
-        await interaction.reply('https://gfycat.com/concernedwelllitisopod')
-      })
+        location = response.user?.location
 
-    // TODO: Default reply
-    // await interaction.reply('https://gfycat.com/concernedwelllitisopod')
-  }
-})
+        fetch(`https://wttr.in/${location}?format=j1`)
+          .then(r => r.json())
+          .then(async data => {
+            const currentCondition = data['current_condition'][0]
+            const {
+              humidity,
+              temp_C,
+              temp_F,
+              FeelsLikeC,
+              FeelsLikeF,
+              windspeedKmph,
+              windspeedMiles
+            } = currentCondition
+            const weatherDescription: string =
+              currentCondition.weatherDesc[0].value
+            const nearestArea = data['nearest_area'][0]
 
-client.login(token)
+            const areaName = nearestArea.areaName[0].value
+            const region = nearestArea.region[0].value
+            const country = nearestArea.country[0].value
+
+            // Using MessageEmbed API
+            const embed = new MessageEmbed()
+              .setColor('#0099ff')
+              .setTitle(
+                `Weather in ${areaName}, ${
+                  region ? region + ', ' + country : country
+                }`
+              )
+              .setURL(`https://wttr.in/${location}`)
+              .setTimestamp()
+              .addField(
+                'Currently',
+                `${
+                  weatherDescToIconMap[
+                    weatherDescription.split(' ').join('').toLowerCase()
+                  ] || ''
+                } **${weatherDescription}**\n:thermometer: Temperature **${temp_C} °C** (${temp_F} °F), Feels Like: **${FeelsLikeC} °C** (${FeelsLikeF} °F)\n:wind_blowing_face: Wind ${windspeedKmph} km/h (${windspeedMiles} mph)\n:sweat_drops: Humidity: ${humidity}%`
+              )
+              .setFooter({ text: 'powered by wttr.in' })
+
+            if (!initialLocation || response.user?.location !== location) {
+              await updateUser(userId, location!)
+            }
+            interaction.reply({ embeds: [embed] })
+          })
+          .catch(async err => {
+            console.log(err)
+            await interaction.reply('https://gfycat.com/concernedwelllitisopod')
+          })
+
+        // TODO: Default reply
+        // await interaction.reply('https://gfycat.com/concernedwelllitisopod')
+      }
+    })
+
+    client.login(token)
+  })
+  .catch(() => {
+    console.log('Error connecting to db')
+  })
