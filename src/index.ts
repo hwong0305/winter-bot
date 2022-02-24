@@ -31,10 +31,8 @@ initDb()
         const userId = interaction.user.id
 
         if (!initialLocation) {
-          const response = await findUser(userId).catch(() => {
-            interaction.reply(
-              'You have not set your location set. Set your location with `/weather {location}`'
-            )
+          const response = await findUser(userId).catch(async () => {
+            await interaction.reply('https://gfycat.com/concernedwelllitisopod')
             return { success: false, user: undefined }
           })
 
@@ -95,9 +93,6 @@ initDb()
             console.log(err)
             await interaction.reply('https://gfycat.com/concernedwelllitisopod')
           })
-
-        // TODO: Default reply
-        // await interaction.reply('https://gfycat.com/concernedwelllitisopod')
       }
     })
 
