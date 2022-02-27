@@ -1,5 +1,5 @@
 import { Client, Intents, MessageEmbed } from 'discord.js'
-import { fetchWeatherData } from './lib/fetchwwo'
+import { fetchWeatherData } from './lib/fetchowp'
 import 'dotenv/config'
 
 import { weatherSymbol as weatherDescToIconMap } from './iconMap'
