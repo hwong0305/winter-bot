@@ -1,6 +1,7 @@
 import fetch from 'isomorphic-unfetch'
 import 'dotenv/config'
 import { OwpWeatherResponse } from 'src/interface/response'
+import { parseStateCode } from './tempUtil'
 
 const { OWP_API_KEY } = process.env
 if (!OWP_API_KEY) throw new Error('Invalid API key')
@@ -11,7 +12,18 @@ export const fetchWeatherData = async (
   location: string
 ): Promise<OwpWeatherResponse | null> => {
   try {
-    const response = await fetch(`${URI}&q=${encodeURI(location)}`)
+    const locationArr = location.split(',')
+    let parsedLocation
+
+    if (locationArr.length > 1) {
+      parsedLocation = locationArr[0] + ','
+      parseStateCode(locationArr[1].trim()) +
+        location.split(',').slice(2).join('')
+    } else {
+      parsedLocation = location
+    }
+
+    const response = await fetch(`${URI}&q=${encodeURI(parsedLocation)}`)
     if (!response.ok) {
       throw new Error('fetching error')
     }
