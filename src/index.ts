@@ -2,10 +2,7 @@ import { Client, Intents, MessageEmbed } from 'discord.js'
 import { fetchWeatherData } from './lib/fetchowp'
 import 'dotenv/config'
 
-import {
-  getIconFromCode,
-  weatherSymbol as weatherDescToIconMap
-} from './iconMap'
+import { getIconFromCode } from './iconMap'
 import initDb from './init'
 import { findUser, updateUser } from './dao/user'
 import { convertCtoF } from './lib/tempUtil'
@@ -29,7 +26,6 @@ initDb()
       if (!interaction.isCommand()) return
       const commandName = interaction?.commandName
       if (commandName === 'weather') {
-        // TODO: Move away from wttr.in which is has been reaching capacity 2/23/22
         const initialLocation = !!interaction.options.getString('location')
         let location = interaction.options.getString('location')
         const userId = interaction.user.id
@@ -59,20 +55,6 @@ initDb()
             const FeelsLikeF = convertCtoF(FeelsLikeC)
             const windSpeed = data.wind.speed
             const windSpeedImperial = (+data.wind.speed * 3600) / 1000
-
-            //  The response below is used with World Weather Online
-            // const currentCondition = data['current_condition'][0]
-            // const {
-            //   humidity,
-            //   temp_C,
-            //   temp_F,
-            //   FeelsLikeC,
-            //   FeelsLikeF,
-            //   windspeedKmph,
-            //   windspeedMiles
-            // } = currentCondition
-            // const weatherDescription: string =
-            //   currentCondition.weatherDesc[0].value
 
             // Using MessageEmbed API
             const embed = new MessageEmbed()
