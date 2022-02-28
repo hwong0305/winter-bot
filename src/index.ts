@@ -63,7 +63,7 @@ initDb()
 
             // Using MessageEmbed API
             const embed = new MessageEmbed()
-              .setColor('#0099ff')
+              .setColor('#fffff0')
               .setTitle(`Weather in ${data.name}, ${data.sys.country}`)
               .setURL(
                 `https://maps.google.com/?q=${data.coord.lat},${data.coord.lon}`
