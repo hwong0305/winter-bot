@@ -65,6 +65,9 @@ initDb()
             const embed = new MessageEmbed()
               .setColor('#0099ff')
               .setTitle(`Weather in ${data.name}, ${data.sys.country}`)
+              .setURL(
+                `https://maps.google.com/?q=${data.coord.lat},${data.coord.lon}`
+              )
               .setTimestamp()
               .addField(
                 'Currently',
