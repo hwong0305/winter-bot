@@ -2,9 +2,13 @@ import { Client, Intents, MessageEmbed } from 'discord.js'
 import { fetchWeatherData } from './lib/fetchowp'
 import 'dotenv/config'
 
-import { weatherSymbol as weatherDescToIconMap } from './iconMap'
+import {
+  getIconFromCode,
+  weatherSymbol as weatherDescToIconMap
+} from './iconMap'
 import initDb from './init'
 import { findUser, updateUser } from './dao/user'
+import { convertCtoF } from './lib/tempUtil'
 
 const token = process.env.DISCORD_TOKEN
 
@@ -47,32 +51,51 @@ initDb()
 
         fetchWeatherData(location!)
           .then(async data => {
-            console.log(data)
-            const currentCondition = data['current_condition'][0]
-            const {
-              humidity,
-              temp_C,
-              temp_F,
-              FeelsLikeC,
-              FeelsLikeF,
-              windspeedKmph,
-              windspeedMiles
-            } = currentCondition
-            const weatherDescription: string =
-              currentCondition.weatherDesc[0].value
+            if (!data) throw new Error()
+            const humidity = data.main.humidity
+            const temp_C = +data.main.temp - 273
+            const temp_F = Math.floor(convertCtoF(temp_C))
+            const FeelsLikeC = +data.main.feels_like - 273
+            const FeelsLikeF = convertCtoF(FeelsLikeC)
+            const windSpeed = data.wind.speed
+            const windSpeedImperial = (+data.wind.speed * 3600) / 1000
+
+            //  The response below is used with World Weather Online
+            // const currentCondition = data['current_condition'][0]
+            // const {
+            //   humidity,
+            //   temp_C,
+            //   temp_F,
+            //   FeelsLikeC,
+            //   FeelsLikeF,
+            //   windspeedKmph,
+            //   windspeedMiles
+            // } = currentCondition
+            // const weatherDescription: string =
+            //   currentCondition.weatherDesc[0].value
 
             // Using MessageEmbed API
             const embed = new MessageEmbed()
               .setColor('#0099ff')
-              .setTitle(`Weather in ${data.request[0].query}`)
+              .setTitle(`Weather in ${data.name}, ${data.sys.country}`)
               .setTimestamp()
               .addField(
                 'Currently',
-                `${
-                  weatherDescToIconMap[
-                    weatherDescription.split(' ').join('').toLowerCase()
-                  ] || ''
-                } **${weatherDescription}**\n:thermometer: Temperature **${temp_C} °C** (${temp_F} °F), Feels Like: **${FeelsLikeC} °C** (${FeelsLikeF} °F)\n:wind_blowing_face: Wind ${windspeedKmph} km/h (${windspeedMiles} mph)\n:sweat_drops: Humidity: ${humidity}%`
+                `${getIconFromCode(data.weather[0].icon)} **${
+                  data.weather[0].main
+                }**\n:thermometer: Temperature **${temp_C.toFixed(
+                  1
+                )} °C** (${Math.floor(
+                  temp_F
+                )} °F), Feels Like: **${FeelsLikeC.toFixed(
+                  1
+                )} °C** (${Math.floor(
+                  FeelsLikeF
+                )} °F)\n:wind_blowing_face: Wind ${windSpeed.toFixed(
+                  2
+                )} m/s (${Math.floor(
+                  windSpeedImperial
+                )} mph)\n:sweat_drops: Humidity: ${humidity}%`
               )
               .setFooter({ text: 'created with love for Winter by sfwong445' })
 
