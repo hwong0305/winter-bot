@@ -56,6 +56,11 @@ initDb()
             const windSpeed = data.wind.speed
             const windSpeedImperial = (+data.wind.speed * 3600) / 1000
 
+            const weatherIcon =
+              data.weather[0].icon === '01d'
+                ? '01d'
+                : data.weather[0].icon.slice(0, 2)
+
             // Using MessageEmbed API
             const embed = new MessageEmbed()
               .setColor('#0099ff')
@@ -63,7 +68,7 @@ initDb()
               .setTimestamp()
               .addField(
                 'Currently',
-                `${getIconFromCode(data.weather[0].icon)} **${
+                `${getIconFromCode(weatherIcon) ?? ''} **${
                   data.weather[0].main
                 }**\n:thermometer: Temperature **${temp_C.toFixed(
                   1

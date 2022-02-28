@@ -11,8 +11,10 @@ export const fetchWeatherData = async (
   location: string
 ): Promise<OwpWeatherResponse | null> => {
   try {
-    const response = await fetch(`${URI}&q=${location}`)
-    if (!response.ok) throw new Error('fetching error')
+    const response = await fetch(`${URI}&q=${encodeURI(location)}`)
+    if (!response.ok) {
+      throw new Error('fetching error')
+    }
     const responseJson = await response.json()
     return responseJson
   } catch (err) {

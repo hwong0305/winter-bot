@@ -20,11 +20,9 @@ export const weatherSymbol: { [key: string]: string } = {
   verycloudy: '☁️'
 }
 
-export const getIconFromCode = (icon: string) => {
-  const iconCode = icon.slice(0, 2)
-
+export const getIconFromCode = (iconCode: string) => {
   switch (iconCode) {
-    case '01':
+    case '01d':
       return '☀️'
     case '02':
       return '☁️'
