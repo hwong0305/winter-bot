@@ -12,13 +12,18 @@ export const findUser = async (id: string) => {
 }
 
 export const updateUser = async (id: string, location: string) => {
-  const user = await User.findOrCreate({
+  const [user, created] = await User.findOrCreate({
     where: { userId: id },
     defaults: { userId: id, location }
   })
 
+  if (!created) {
+    user.location = location
+  }
+  await user.save()
+
   return {
     success: true,
-    user: user[0].id
+    user: user.id
   }
 }
