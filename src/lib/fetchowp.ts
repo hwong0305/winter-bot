@@ -3,6 +3,8 @@ import 'dotenv/config'
 import { OwpWeatherResponse } from 'src/interface/response'
 import { parseStateCode } from './tempUtil'
 
+import { logger } from './logger'
+
 const { OWP_API_KEY } = process.env
 if (!OWP_API_KEY) throw new Error('Invalid API key')
 
@@ -36,7 +38,11 @@ export const fetchWeatherData = async (
     const responseJson = await response.json()
     return responseJson
   } catch (err) {
-    console.error(err)
+    if (err instanceof Error) {
+      logger.error(err.message)
+    } else {
+      logger.error(JSON.stringify(err))
+    }
     return null
   }
 }

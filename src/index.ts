@@ -7,10 +7,10 @@ import initDb from './init'
 import { findUser, updateUser } from './dao/user'
 import { convertCtoF } from './lib/tempUtil'
 import { OwpWeatherResponse } from './interface/response'
+import { logger } from './lib/logger'
 
 const token = process.env.DISCORD_TOKEN
-
-console.log('Bot is starting...')
+logger.debug('Bot is starting...')
 
 initDb()
   .then(() => {
@@ -20,7 +20,7 @@ initDb()
     })
 
     client.once('ready', () => {
-      console.log('Ready!')
+      logger.debug('Ready!')
     })
 
     client.on('interactionCreate', async interaction => {
@@ -51,6 +51,7 @@ initDb()
             if (!data) throw new Error()
 
             if (!isOwpWeatherResponseType(data)) {
+              logger.info('Location not found')
               return interaction.reply(
                 "I can't find the location you are looking for. :thinking:"
               )
@@ -100,7 +101,7 @@ initDb()
             interaction.reply({ embeds: [embed] })
           })
           .catch(async err => {
-            console.log(err)
+            logger.error(err.message)
             // Default error
             await interaction.reply('https://gfycat.com/concernedwelllitisopod')
           })
@@ -110,7 +111,7 @@ initDb()
     client.login(token)
   })
   .catch(() => {
-    console.log('Error connecting to db')
+    logger.error('Error connecting to db')
   })
 
 // Custom Type Guard
