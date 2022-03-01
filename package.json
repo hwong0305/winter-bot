@@ -20,7 +20,8 @@
     "dotenv": "^16.0.0",
     "isomorphic-unfetch": "^3.1.0",
     "sequelize": "^6.16.2",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.2",
+    "winston": "^3.6.0"
   },
   "devDependencies": {
     "@types/node": "^17.0.19",

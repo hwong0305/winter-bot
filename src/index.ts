@@ -1,14 +1,16 @@
 import { Client, Intents, MessageEmbed } from 'discord.js'
-import { fetchWeatherData } from './lib/fetchwwo'
+import { fetchWeatherData } from './lib/fetchowp'
 import 'dotenv/config'
 
-import { weatherSymbol as weatherDescToIconMap } from './iconMap'
+import { getIconFromCode } from './iconMap'
 import initDb from './init'
 import { findUser, updateUser } from './dao/user'
+import { convertCtoF } from './lib/tempUtil'
+import { OwpWeatherResponse } from './interface/response'
+import { logger } from './lib/logger'
 
 const token = process.env.DISCORD_TOKEN
-
-console.log('Bot is starting...')
+logger.debug('Bot is starting...')
 
 initDb()
   .then(() => {
@@ -18,14 +20,13 @@ initDb()
     })
 
     client.once('ready', () => {
-      console.log('Ready!')
+      logger.debug('Ready!')
     })
 
     client.on('interactionCreate', async interaction => {
       if (!interaction.isCommand()) return
       const commandName = interaction?.commandName
       if (commandName === 'weather') {
-        // TODO: Move away from wttr.in which is has been reaching capacity 2/23/22
         const initialLocation = !!interaction.options.getString('location')
         let location = interaction.options.getString('location')
         const userId = interaction.user.id
@@ -47,32 +48,52 @@ initDb()
 
         fetchWeatherData(location!)
           .then(async data => {
-            console.log(data)
-            const currentCondition = data['current_condition'][0]
-            const {
-              humidity,
-              temp_C,
-              temp_F,
-              FeelsLikeC,
-              FeelsLikeF,
-              windspeedKmph,
-              windspeedMiles
-            } = currentCondition
-            const weatherDescription: string =
-              currentCondition.weatherDesc[0].value
+            if (!data) throw new Error()
+
+            if (!isOwpWeatherResponseType(data)) {
+              logger.info('Location not found')
+              return interaction.reply(
+                "I can't find the location you are looking for. :thinking:"
+              )
+            }
+            const humidity = data.main.humidity
+            const temp_C = +data.main.temp - 273
+            const temp_F = Math.floor(convertCtoF(temp_C))
+            const FeelsLikeC = +data.main.feels_like - 273
+            const FeelsLikeF = convertCtoF(FeelsLikeC)
+            const windSpeed = data.wind.speed
+            const windSpeedImperial = (+data.wind.speed * 3600) / 1000
+
+            const weatherIcon =
+              data.weather[0].icon === '01d'
+                ? '01d'
+                : data.weather[0].icon.slice(0, 2)
 
             // Using MessageEmbed API
             const embed = new MessageEmbed()
-              .setColor('#0099ff')
-              .setTitle(`Weather in ${data.request[0].query}`)
+              .setColor('#fffff0')
+              .setTitle(`Weather in ${data.name}, ${data.sys.country}`)
+              .setURL(
+                `https://maps.google.com/?q=${data.coord.lat},${data.coord.lon}`
+              )
               .setTimestamp()
               .addField(
                 'Currently',
-                `${
-                  weatherDescToIconMap[
-                    weatherDescription.split(' ').join('').toLowerCase()
-                  ] || ''
-                } **${weatherDescription}**\n:thermometer: Temperature **${temp_C} °C** (${temp_F} °F), Feels Like: **${FeelsLikeC} °C** (${FeelsLikeF} °F)\n:wind_blowing_face: Wind ${windspeedKmph} km/h (${windspeedMiles} mph)\n:sweat_drops: Humidity: ${humidity}%`
+                `${getIconFromCode(weatherIcon) ?? ''} **${
+                  data.weather[0].main
+                }**\n:thermometer: Temperature **${temp_C.toFixed(
+                  1
+                )} °C** (${Math.floor(
+                  temp_F
+                )} °F), Feels Like: **${FeelsLikeC.toFixed(
+                  1
+                )} °C** (${Math.floor(
+                  FeelsLikeF
+                )} °F)\n:wind_blowing_face: Wind ${windSpeed.toFixed(
+                  2
+                )} m/s (${Math.floor(
+                  windSpeedImperial
+                )} mph)\n:sweat_drops: Humidity: ${humidity}%`
               )
               .setFooter({ text: 'created with love for Winter by sfwong445' })
 
@@ -80,7 +101,8 @@ initDb()
             interaction.reply({ embeds: [embed] })
           })
           .catch(async err => {
-            console.log(err)
+            logger.error(err.message)
+            // Default error
             await interaction.reply('https://gfycat.com/concernedwelllitisopod')
           })
       }
@@ -89,5 +111,12 @@ initDb()
     client.login(token)
   })
   .catch(() => {
-    console.log('Error connecting to db')
+    logger.error('Error connecting to db')
   })
+
+// Custom Type Guard
+function isOwpWeatherResponseType(
+  arg: OwpWeatherResponse | { status: number } | null
+): arg is OwpWeatherResponse {
+  return (arg as OwpWeatherResponse).base !== undefined
+}
