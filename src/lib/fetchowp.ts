@@ -10,7 +10,13 @@ const URI = `https://api.openweathermap.org/data/2.5/weather?appid=${OWP_API_KEY
 
 export const fetchWeatherData = async (
   location: string
-): Promise<OwpWeatherResponse | null> => {
+): Promise<
+  | OwpWeatherResponse
+  | {
+      status: number
+    }
+  | null
+> => {
   try {
     const locationArr = location.split(',')
     let parsedLocation
@@ -25,7 +31,7 @@ export const fetchWeatherData = async (
 
     const response = await fetch(`${URI}&q=${encodeURI(parsedLocation)}`)
     if (!response.ok) {
-      throw new Error('fetching error')
+      return { status: 404 }
     }
     const responseJson = await response.json()
     return responseJson

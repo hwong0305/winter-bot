@@ -6,6 +6,7 @@ import { getIconFromCode } from './iconMap'
 import initDb from './init'
 import { findUser, updateUser } from './dao/user'
 import { convertCtoF } from './lib/tempUtil'
+import { OwpWeatherResponse } from './interface/response'
 
 const token = process.env.DISCORD_TOKEN
 
@@ -48,6 +49,12 @@ initDb()
         fetchWeatherData(location!)
           .then(async data => {
             if (!data) throw new Error()
+
+            if (!isOwpWeatherResponseType(data)) {
+              return interaction.reply(
+                "I can't find the location you are looking for. :thinking:"
+              )
+            }
             const humidity = data.main.humidity
             const temp_C = +data.main.temp - 273
             const temp_F = Math.floor(convertCtoF(temp_C))
@@ -94,6 +101,7 @@ initDb()
           })
           .catch(async err => {
             console.log(err)
+            // Default error
             await interaction.reply('https://gfycat.com/concernedwelllitisopod')
           })
       }
@@ -104,3 +112,10 @@ initDb()
   .catch(() => {
     console.log('Error connecting to db')
   })
+
+// Custom Type Guard
+function isOwpWeatherResponseType(
+  arg: OwpWeatherResponse | { status: number } | null
+): arg is OwpWeatherResponse {
+  return (arg as OwpWeatherResponse).base !== undefined
+}
