@@ -12,7 +12,7 @@
   "dependencies": {
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "pino": "^9.2.0",
     "sequelize": "^6.37.3",
     "sqlite3": "^5.1.7"
