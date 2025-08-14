@@ -1,5 +1,5 @@
-import fetch from 'isomorphic-unfetch'
 import 'dotenv/config'
+import fetch from 'isomorphic-unfetch'
 import { OwpWeatherResponse } from 'src/interface/response'
 import { parseStateCode } from './tempUtil'
 
@@ -24,8 +24,10 @@ export const fetchWeatherData = async (
     let parsedLocation
 
     if (locationArr.length > 1) {
-      parsedLocation = locationArr[0] + ','
-      parseStateCode(locationArr[1].trim()) +
+      parsedLocation =
+        locationArr[0] +
+        ',' +
+        parseStateCode(locationArr[1].trim()) +
         location.split(',').slice(2).join('')
     } else {
       parsedLocation = location
