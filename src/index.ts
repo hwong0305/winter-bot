@@ -1,4 +1,4 @@
-import { Client, Intents, MessageEmbed } from 'discord.js'
+import { Client, EmbedBuilder, GatewayIntentBits } from 'discord.js'
 import 'dotenv/config'
 import { findUser, updateUser } from './dao/user'
 import { getIconFromCode } from './iconMap'
@@ -14,11 +14,10 @@ logger.debug('Bot is starting...')
 initDb()
   .then(() => {
     const client = new Client({
-      intents: [Intents.FLAGS.GUILDS],
-      restRequestTimeout: 30000
+      intents: [GatewayIntentBits.Guilds]
     })
 
-    client.once('ready', () => {
+    client.once('clientReady', () => {
       logger.debug('Ready!')
     })
 
@@ -26,6 +25,7 @@ initDb()
       if (!interaction.isCommand()) return
       const commandName = interaction?.commandName
       if (commandName === 'weather') {
+        // Some issues with TS typing on discord.js's side
         const initialLocation = !!interaction.options.getString('location')
         let location = interaction.options.getString('location')
         const userId = interaction.user.id
@@ -69,16 +69,16 @@ initDb()
                 : data.weather[0].icon.slice(0, 2)
 
             // Using MessageEmbed API
-            const embed = new MessageEmbed()
+            const embed = new EmbedBuilder()
               .setColor('#fffff0')
               .setTitle(`Weather in ${data.name}, ${data.sys.country}`)
               .setURL(
                 `https://maps.google.com/?q=${data.coord.lat},${data.coord.lon}`
               )
               .setTimestamp()
-              .addField(
-                'Currently',
-                `${getIconFromCode(weatherIcon) ?? ''} **${
+              .addFields({
+                name: 'Currently',
+                value: `${getIconFromCode(weatherIcon) ?? ''} **${
                   data.weather[0].main
                 }**\n:thermometer: Temperature **${temp_C.toFixed(
                   1
@@ -93,7 +93,7 @@ initDb()
                 )} m/s (${Math.floor(
                   windSpeedImperial
                 )} mph)\n:sweat_drops: Humidity: ${humidity}%`
-              )
+              })
               .setFooter({ text: 'created with love for Winter by sfwong445' })
 
             await updateUser(userId, location!)
