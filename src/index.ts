@@ -1,13 +1,12 @@
 import { Client, Intents, MessageEmbed } from 'discord.js'
-import { fetchWeatherData } from './lib/fetchowp'
 import 'dotenv/config'
-
+import { findUser, updateUser } from './dao/user'
 import { getIconFromCode } from './iconMap'
 import initDb from './init'
-import { findUser, updateUser } from './dao/user'
-import { convertCtoF } from './lib/tempUtil'
 import { OwpWeatherResponse } from './interface/response'
+import { fetchWeatherData } from './lib/fetchowp'
 import { logger } from './lib/logger'
+import { convertCtoF } from './lib/tempUtil'
 
 const token = process.env.DISCORD_TOKEN
 logger.debug('Bot is starting...')
@@ -33,7 +32,7 @@ initDb()
 
         if (!initialLocation) {
           const response = await findUser(userId).catch(async () => {
-            await interaction.reply('https://gfycat.com/concernedwelllitisopod')
+            await interaction.reply('Unknown error occured :(')
             return { success: false, user: undefined }
           })
 
@@ -103,7 +102,7 @@ initDb()
           .catch(async err => {
             logger.error(err.message)
             // Default error
-            await interaction.reply('https://gfycat.com/concernedwelllitisopod')
+            await interaction.reply('Unknown error occured :(')
           })
       }
     })
